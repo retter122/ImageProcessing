@@ -1,0 +1,1 @@
+g++ "./main.cpp" -o "./build/ImageProcessing.exe" -lgdi32
