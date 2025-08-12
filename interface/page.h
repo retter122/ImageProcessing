@@ -1,7 +1,7 @@
 #pragma once
 
 #include <iostream>
-#include <windwos.h>
+#include <windows.h>
 #include <stdint.h>
 
 #include "../image/image.h"
