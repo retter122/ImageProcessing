@@ -6,15 +6,9 @@
 
 #include "./button.h"
 #include "./edit.h"
+#include "./page.h"
 
 #include "../image/loader.h"
-
-
-// PAGE STRUCT
-struct Page {
-    Button PgButton;
-    Image PgImage;
-};
 
 
 // BACKGROUND DATA
@@ -28,7 +22,7 @@ static uint32_t PALETTE_R = 0, PALETTE_G = 0, PALETTE_B = 0;
 #define LEFTPANEL_BTN_SIZE 0.08
 #define LEFTPANEL_START 0.09
 
-#define LEFTPANEL_PALETTE_WIDTH 0.16
+#define LEFTPANEL_PALETTE_WIDTH 0.10
 #define LEFTPANEL_PALETTE_HEIGHT 0.035
 #define LEFTPANEL_RGB_MARGIN 0.02
 #define LEFTPANEL_RGB_FONTSIZE 0.038
@@ -47,9 +41,14 @@ static uint32_t PALETTE_R = 0, PALETTE_G = 0, PALETTE_B = 0;
 
 
 // UPPANEL PARAMS
-#define UPPANEL_BTN_WIDTH 0.15
+#define UPPANEL_BTN_WIDTH 0.2
 #define UPPANEL_BTN_HEIGHT 0.05
 #define UPPANEL_FONTSIZE 0.048
+
+#define UPPANEL_NEW 10
+#define UPPANEL_SAVE 11
+#define UPPANEL_LOAD 12
+#define UPPANEL_PARAMS 13
 
 
 // LEFT PANEL INTERFACE DATA
@@ -76,7 +75,10 @@ static Edit RGBPalete[] = {
 
 // UPPANEL INTERFACE DATA
 static Button UpPanel[] = {
-    Button(0, 0, UPPANEL_BTN_WIDTH, UPPANEL_BTN_HEIGHT, UPPANEL_FONTSIZE, "Save", 1)
+    Button(0, 0, UPPANEL_BTN_WIDTH, UPPANEL_BTN_HEIGHT, UPPANEL_FONTSIZE, "New", UPPANEL_SAVE),
+    Button(UPPANEL_BTN_WIDTH, 0, UPPANEL_BTN_WIDTH, UPPANEL_BTN_HEIGHT, UPPANEL_FONTSIZE, "Save", UPPANEL_SAVE),
+    Button(UPPANEL_BTN_WIDTH * 2, 0, UPPANEL_BTN_WIDTH, UPPANEL_BTN_HEIGHT, UPPANEL_FONTSIZE, "Load", UPPANEL_LOAD),
+    Button(UPPANEL_BTN_WIDTH * 3, 0, UPPANEL_BTN_WIDTH, UPPANEL_BTN_HEIGHT, UPPANEL_FONTSIZE, "Params", UPPANEL_PARAMS),
 };
 #define UpPanelSize (sizeof(UpPanel) / sizeof(Button))
 
@@ -118,10 +120,14 @@ static void DrawBackground(HDC Dc, uint32_t WSizeX, uint32_t WSizeY) {
     SelectObject(Dc, BgrBrushes[1]);
     Rectangle(Dc, 0, 0, WSizeY * LEFTPANEL_BTN_SIZE, WSizeY);
     Rectangle(Dc, 0, (LEFTPANEL_START + LEFTPANEL_BTN_SIZE * 9) * WSizeY, (LEFTPANEL_PALETTE_WIDTH + LEFTPANEL_RGB_MARGIN * 2 + LEFTPANEL_RGB_WIDTH) * WSizeY, WSizeY);
+    Rectangle(Dc, 0, 0, WSizeX + 1, WSizeY * (LEFTPANEL_START));
+
+    HPEN RGBPen = CreatePen(PS_SOLID, 0.01 * WSizeY, 0);
 
     PALETTE_R = RGBPalete[0].get_number(), PALETTE_G = RGBPalete[1].get_number(), PALETTE_B = RGBPalete[2].get_number();
     HBRUSH NowRGB = CreateSolidBrush(RGB( PALETTE_R,  PALETTE_G,  PALETTE_B));
-    SelectObject(Dc, NowRGB);
+
+    SelectObject(Dc, NowRGB), SelectObject(Dc, RGBPen);
 
     Rectangle(Dc, (LEFTPANEL_PALETTE_WIDTH + LEFTPANEL_RGB_MARGIN) * WSizeY, (LEFTPANEL_START + LEFTPANEL_BTN_SIZE * 9 + LEFTPANEL_RGB_MARGIN) * WSizeY, (LEFTPANEL_PALETTE_WIDTH + LEFTPANEL_RGB_MARGIN + LEFTPANEL_RGB_WIDTH) * WSizeY + 1, (LEFTPANEL_START + LEFTPANEL_BTN_SIZE * 9 + LEFTPANEL_RGB_MARGIN + LEFTPANEL_RGB_HEIGHT) * WSizeY + 1);
     DeleteObject(NowRGB);

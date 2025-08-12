@@ -30,6 +30,13 @@ class Image {
         uint32_t get_height() const { return this->height; }
         float (*get_bytes() const)[4] { return this->bytes; }
 
+        void clear() {
+            uint32_t bytes_num = this->width * this->height;
+            if (!this->bytes) this->bytes = new float[4][bytes_num];
+
+            for (uint32_t i = 0; i < bytes_num; ++i) ToF32RGB(this->bytes, 0), this->bytes[i][3] = 0;
+        }
+
         void copy_bytes(float (*_bytes)[4]) {
             if (!_bytes) return;
 
