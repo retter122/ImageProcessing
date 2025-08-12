@@ -12,7 +12,7 @@
 #define GetU32B(Color) (Color & 0xFF)
 
 #define ToU32RGB(R, G, B) (((uint32_t)R << 16) | ((uint32_t)G << 8) | (uint32_t)B)
-#define ToF32RGB(U32, F32) (F32[0] = GetU32R(U32), F32[1] = GetU32G(U32), F32[2] = GetU32B(U32), F32[3] = 0)
+#define ToF32RGB(U32, F32) (F32[0] = GetU32R(U32), F32[1] = GetU32G(U32), F32[2] = GetU32B(U32))
 
 
 // IMAGE CLASS
@@ -32,9 +32,9 @@ class Image {
 
         void clear() {
             uint32_t bytes_num = this->width * this->height;
-            if (!this->bytes) this->bytes = new float[4][bytes_num];
+            if (!this->bytes) this->bytes = new float[bytes_num][4];
 
-            for (uint32_t i = 0; i < bytes_num; ++i) ToF32RGB(this->bytes, 0), this->bytes[i][3] = 0;
+            for (uint32_t i = 0; i < bytes_num; ++i) ToF32RGB(0, this->bytes[i]), this->bytes[i][3] = 0;
         }
 
         void copy_bytes(float (*_bytes)[4]) {
@@ -87,7 +87,7 @@ static Image Uint32ToPixels(uint32_t *buffer, uint32_t _wid, uint32_t _hei) {
     uint32_t buf_size = _wid * _hei;
     float (*bytes)[4] = new float[buf_size][4];
 
-    for (uint32_t i = 0; i < buf_size; ++i) ToF32RGB(buffer[i], bytes[i]);
+    for (uint32_t i = 0; i < buf_size; ++i) ToF32RGB(buffer[i], bytes[i]), bytes[i][3] = 1;
 
     Image _out(_wid, _hei, bytes);
     delete[] bytes;

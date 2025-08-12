@@ -34,7 +34,7 @@ static Image BmpLoad(const std::string& _path) {
     fseek(InpFile, BFile.bfOffBits, SEEK_SET);
     for (uint32_t i = 0; i < bytes_num; ++i) {
         fread(&inp_dword, BInfo.biBitCount / 8, 1, InpFile);
-        ToF32RGB(inp_dword, bytes[i]);
+        ToF32RGB(inp_dword, bytes[i]), bytes[i][3] = 1;
     }
 
     fclose(InpFile);

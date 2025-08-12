@@ -18,6 +18,7 @@ struct Page {
     Button PgButton;
     Image PgImage;
 
+    Page() {}
     Page(uint32_t width, uint32_t height, uint32_t btn_id) {}
 };
 
