@@ -14,6 +14,7 @@
 #define ToU32RGB(R, G, B) (((uint32_t)R << 16) | ((uint32_t)G << 8) | (uint32_t)B)
 #define ToF32RGB(U32, F32) (F32[0] = GetU32R(U32), F32[1] = GetU32G(U32), F32[2] = GetU32B(U32), F32[3] = 0)
 
+
 // IMAGE CLASS
 class Image {
     private:
