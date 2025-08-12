@@ -25,27 +25,22 @@ static MSG Msg = { 0 };
 static HDC Dc = 0;
 static PAINTSTRUCT PStruct = { 0 };
 
-static HBRUSH BgrBrushes[2] = { 0, 0 };
-static HPEN BgrPens[1] = { 0 };
-
-static POINT WSize = { 0 };
+static RECT WSize = { 0 };
 
 // MAIN FUNCTION
 int main() {
-    WSize.x = GetSystemMetrics(SM_CXSCREEN) * WSizeScreenAsp, WSize.y = GetSystemMetrics(SM_CYSCREEN) * WSizeScreenAsp;
-
-    BgrBrushes[0] = CreateSolidBrush(RGB(128, 128, 128)), BgrBrushes[1] = CreateSolidBrush(RGB(80, 80, 80));
-    BgrPens[0] = CreatePen(PS_NULL, 0, RGB(0, 0, 0));
+    WSize.right = GetSystemMetrics(SM_CXSCREEN) * WSizeScreenAsp, WSize.bottom = GetSystemMetrics(SM_CYSCREEN) * WSizeScreenAsp;
 
     // WINDOW INIT
     if (!RegisterClassA(&WClass));
-    ShowWindow(CreateWindowExA(0, WClass.lpszClassName, WName, WS_OVERLAPPEDWINDOW, WSize.x * WPosScreenAsp, WSize.y * WPosScreenAsp, WSize.x, WSize.y, 0, 0, 0, 0), SW_SHOWNORMAL);
+    ShowWindow(CreateWindowExA(0, WClass.lpszClassName, WName, WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN, WSize.right * WPosScreenAsp, WSize.bottom * WPosScreenAsp, WSize.right, WSize.bottom, 0, 0, 0, 0), SW_SHOWNORMAL);
 
     // APP MAIN CYCLE
     int32_t last_time = clock();
     while (1) {
         if (PeekMessageA(&Msg, 0, 0, 0, PM_REMOVE)) {
             DispatchMessageA(&Msg);
+            TranslateMessage(&Msg);
             if (Msg.message == WM_QUIT) break;
         } else {
             Sleep(std::max(0, FPS_SLEEP - ((int32_t)clock() - last_time)));
@@ -57,16 +52,6 @@ int main() {
 }
 
 
-// DRAW BACKGROUND FUNCTION
-static void DrawBackground() {
-    SelectObject(Dc, BgrBrushes[0]), SelectObject(Dc, BgrPens[0]);
-    Rectangle(Dc, 0, 0, WSize.x + 1, WSize.y + 1);
-
-    SelectObject(Dc, BgrBrushes[1]);
-    Rectangle(Dc, 0, 0, WSize.y * LEFTPANEL_BTN_SIZE, WSize.y);
-}
-
-
 // MESSAGE PROCESSING FUNCTION
 static LRESULT WProc(HWND hWnd, UINT Mess, WPARAM WPar, LPARAM LPar) {
     switch (Mess) {
@@ -75,21 +60,26 @@ static LRESULT WProc(HWND hWnd, UINT Mess, WPARAM WPar, LPARAM LPar) {
             PostQuitMessage(0);
             break;
 
+        case (WM_COMMAND):
+            InvalidateRect(hWnd, &WSize, FALSE);
+            break;
+
         // WINDOW CREATE EVENT
         case (WM_CREATE):
-            ShowInterface(WSize.y, hWnd);
+            ShowInterface(WSize.bottom, hWnd);
             break;
 
         // WINDOW RESIZE EVENT
         case (WM_SIZE):
-            WSize.x = LPar & 0xFFFF, WSize.y = ((LPar >> 16) & 0xFFFF);
-            UpdateInterface(WSize.y);
+            WSize.right = LPar & 0xFFFF, WSize.bottom = ((LPar >> 16) & 0xFFFF);
             break;
 
         // PAINT EVENT
         case (WM_PAINT):
+            UpdateInterface(WSize.bottom);
+
             Dc = BeginPaint(hWnd, &PStruct);
-            DrawBackground();
+            DrawBackground(Dc, WSize.right, WSize.bottom);
 
             EndPaint(hWnd, &PStruct);
             break;
