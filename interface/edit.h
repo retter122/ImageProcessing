@@ -19,13 +19,13 @@ class Edit {
         Edit(const Edit& _obj): XPos(_obj.XPos), YPos(_obj.YPos), XSize(_obj.XSize), YSize(_obj.YSize), Handle(_obj.Handle), FontSize(_obj.FontSize), HFont(0) {}
         Edit(float _XP, float _YP, float _XS, float _YS, float _FS): XPos(_XP), YPos(_YP), XSize(_XS), YSize(_YS), Handle(0), FontSize(_FS), HFont(0) {}
 
-        int32_t get_number() { 
+        int32_t get_number() const { 
             std::string str = this->get_text();
             if (str.size() == 0) return 0;
 
             return std::stoi(str);
         }
-        std::string get_text() {
+        std::string get_text() const {
             if (this->Handle == 0) return "";
 
             uint32_t TxtLen = GetWindowTextLengthA(this->Handle);

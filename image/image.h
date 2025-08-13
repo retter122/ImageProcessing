@@ -3,6 +3,8 @@
 #include <iostream>
 #include <stdint.h>
 
+#include "./mask.h"
+
 
 // IMAGE MACROS
 #define CopyImagePixel(Dst, Src) (Dst[0] = Src[0], Dst[1] = Src[1], Dst[2] = Src[2], Dst[3] = Src[3])
@@ -63,6 +65,14 @@ class Image {
             } this->width = new_width, this->height = new_height;
         }
 
+        void mask(const Mask& _mask) {
+            if (!this->bytes || !_mask.get_bytes() || this->width != _mask.get_width() || this->height != _mask.get_height()) return;
+            
+            uint32_t bytes_num = this->width * this->height;
+            float *mask_bytes = _mask.get_bytes();
+            for (uint32_t i = 0; i < bytes_num; ++i) this->bytes[i][0] *= mask_bytes[i], this->bytes[i][1] *= mask_bytes[i], this->bytes[i][2] *= mask_bytes[i], this->bytes[i][3] *= mask_bytes[i];
+        }
+
         void operator=(const Image& _obj) {
             this->width = _obj.width, this->height = _obj.height;
             this->copy_bytes(_obj.bytes);
@@ -72,25 +82,70 @@ class Image {
 };
 
 
-// CONVERT BUFFER FORMAT FUNCTIONS
-static uint32_t *PixelsToUint32(const Image& _obj) {
-    uint32_t NumBytes = _obj.get_width() * _obj.get_height();
-    uint32_t* bytes = new uint32_t[NumBytes];
-    float (*bytes_float)[4] = _obj.get_bytes();
+// BITMAP IMAGE CLASS
+class BitmapImage {
+    private:
+        uint32_t *bytes;
+        BITMAPINFO BMI;
+        HBITMAP HBm;
 
-    for (uint32_t i = 0; i < NumBytes; ++i) bytes[i] = ToU32RGB(bytes_float[i][0], bytes_float[i][1], bytes_float[i][2]);
-    return bytes;
-}
+    public:
+        BitmapImage() : bytes{0}, BMI{ {sizeof(BITMAPINFOHEADER), 0, 0, 1, 32, BI_RGB, 0, 0, 0, 0, 0}, { 0, 0, 0, 0 } }, HBm(0) {}
+        BitmapImage(LONG _wid, LONG _hei, uint32_t* _byt) : BMI{ {sizeof(BITMAPINFOHEADER), _wid, _hei, 1, 32, BI_RGB, 0, 0, 0, 0, 0}, { 0, 0, 0, 0 } }, bytes(0), HBm(0) { this->copy_bytes(_byt); }
+        BitmapImage(const BitmapImage& _obj) : BMI(_obj.BMI), bytes(0), HBm(0) { this->copy_bytes(_obj.bytes); }
 
+        uint32_t get_width() const { return this->BMI.bmiHeader.biWidth; }
+        uint32_t get_height() const { return this->BMI.bmiHeader.biHeight; }
+        uint32_t *get_bytes() const { return this->bytes; }
+        HBITMAP get_bitmap() const { return this->HBm; }
 
-static Image Uint32ToPixels(uint32_t *buffer, uint32_t _wid, uint32_t _hei) {
-    uint32_t buf_size = _wid * _hei;
-    float (*bytes)[4] = new float[buf_size][4];
+        void update_bitmap(HDC Dc) { 
+            if (!this->bytes) return;
+            DeleteObject(this->HBm);
 
-    for (uint32_t i = 0; i < buf_size; ++i) ToF32RGB(buffer[i], bytes[i]), bytes[i][3] = 1;
+            void* temp = (this->bytes);
+            this->HBm = CreateDIBSection(Dc, &this->BMI, DIB_RGB_COLORS, &temp, 0, 0);
+            
+            memcpy(temp, this->bytes, this->BMI.bmiHeader.biHeight * this->BMI.bmiHeader.biWidth * sizeof(uint32_t));
+        }
 
-    Image _out(_wid, _hei, bytes);
-    delete[] bytes;
+        void resize(uint32_t new_width, uint32_t new_heigth) {
+            if (this->bytes) {
+                uint32_t new_bytes_num = new_width * new_heigth;
+                uint32_t *new_bytes = new uint32_t[new_bytes_num];
 
-    return _out;
-}
+                float ypos = 0, yasp = (float)this->BMI.bmiHeader.biHeight / (float)new_heigth, xasp = (float)this->BMI.bmiHeader.biWidth / (float)new_width;
+                for (uint32_t i = 0; i < new_heigth; ++i, ypos += yasp) {
+                    float xpos = 0;
+                    for (uint32_t j = 0; j < new_width; ++j, xpos += xasp) new_bytes[i * new_width + j] = this->bytes[(uint32_t)ypos * this->BMI.bmiHeader.biWidth + (uint32_t)xpos];
+                }
+
+                delete[] this->bytes;
+                this->bytes = new_bytes;
+            } this->BMI.bmiHeader.biWidth = new_width, this->BMI.bmiHeader.biHeight = new_heigth;
+        }
+
+        void copy_bytes(uint32_t* _bytes) {
+            if (!_bytes) return;
+
+            uint32_t bytes_num = this->BMI.bmiHeader.biWidth * this->BMI.bmiHeader.biHeight;
+            if (this->bytes) delete[] this->bytes;
+            this->bytes = new uint32_t[bytes_num];
+
+            memcpy(this->bytes, _bytes, bytes_num * sizeof(uint32_t));
+        }
+
+        void operator=(const BitmapImage& _obj) {
+            if (this->bytes) delete[] this->bytes;
+            DeleteObject(this->HBm);
+
+            this->BMI = _obj.BMI;
+            this->HBm = 0, this->bytes = 0;
+            this->copy_bytes(_obj.bytes);
+        }
+
+        ~BitmapImage() { 
+            if (this->bytes) delete[] this->bytes;
+            DeleteObject(this->HBm);
+        }
+};

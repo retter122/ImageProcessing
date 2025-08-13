@@ -19,7 +19,7 @@ static const char WName[] = "Image Processing";
 
 
 // WINDOW DATA
-static WNDCLASSA WClass = { CS_HREDRAW | CS_VREDRAW, WProc, 0, 0, 0, 0, 0, 0, 0, "Image Processing" };
+static WNDCLASSA WClass = { CS_HREDRAW | CS_VREDRAW, WProc, 0, 0, 0, 0, 0, (HBRUSH)NULL_BRUSH, 0, "Image Processing" };
 static MSG Msg = { 0 };
 
 static HDC Dc = 0;
@@ -41,12 +41,13 @@ int main() {
         if (PeekMessageA(&Msg, 0, 0, 0, PM_REMOVE)) {
             DispatchMessageA(&Msg);
             TranslateMessage(&Msg);
+
             if (Msg.message == WM_QUIT) break;
         } else {
             Sleep(std::max(0, FPS_SLEEP - ((int32_t)clock() - last_time)));
             last_time = clock();
         }
-    }
+    } DeleteInterface();
 
     return 0;
 }
@@ -60,6 +61,7 @@ static LRESULT WProc(HWND hWnd, UINT Mess, WPARAM WPar, LPARAM LPar) {
             PostQuitMessage(0);
             break;
 
+        // COMMAND EVENT
         case (WM_COMMAND):
             InvalidateRect(hWnd, &WSize, FALSE);
             break;

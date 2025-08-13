@@ -3,7 +3,7 @@
 #include <iostream>
 #include <windows.h>
 
-#include "../image/bitmap.h"
+#include "../image/image.h"
 
 
 // BUTTONS DATA
@@ -28,7 +28,7 @@ class Button {
         Button(float _XP, float _YP, float _XS, float _YS, const BitmapImage& _Img, uint64_t id) : FontSize(0), XPos(_XP), YPos(_YP), XSize(_XS), YSize(_YS), BtnHandle(0), Text(""), ImageBtn(_Img), unique_id(id), FontHandle(0) {  }
         Button(const Button& _obj) : FontSize(0), XPos(_obj.XPos), YPos(_obj.YPos), XSize(_obj.XSize), YSize(_obj.YSize), BtnHandle(0), Text(""), ImageBtn(), unique_id(_obj.unique_id), FontHandle(0) {  }
 
-        uint32_t get_id() { return this->unique_id; }
+        uint32_t get_id() const { return this->unique_id; }
 
         void Show(float Scale, HWND Parent) {
             this->BtnHandle = CreateWindowExA(0, "button", this->Text.c_str(), WS_VISIBLE | BS_DEFPUSHBUTTON | WS_CHILD | (this->ImageBtn.get_bytes() ? BS_BITMAP : 0), 0, 0, 0, 0, Parent, (HMENU)this->unique_id, (HINSTANCE)GetWindowLongPtr(Parent, GWLP_HINSTANCE), 0);

@@ -6,7 +6,6 @@
 #include <windows.h>
 
 #include "./image.h"
-#include "./bitmap.h"
 
 
 // BMP LOAD FUNCTIONS

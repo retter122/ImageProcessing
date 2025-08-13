@@ -109,6 +109,9 @@ static void UpdateInterface(float Scale) {
 
     // UPDATE UP PANEL
     for (uint32_t i = 0; i < UpPanelSize; ++i) UpPanel[i].Update(Scale);
+
+    // UPDATE PAGES
+    UpdatePages(Scale);
 }
 
 
@@ -118,9 +121,9 @@ static void DrawBackground(HDC Dc, uint32_t WSizeX, uint32_t WSizeY) {
     Rectangle(Dc, 0, 0, WSizeX + 1, WSizeY + 1);
 
     SelectObject(Dc, BgrBrushes[1]);
-    Rectangle(Dc, 0, 0, WSizeY * LEFTPANEL_BTN_SIZE, WSizeY);
-    Rectangle(Dc, 0, (LEFTPANEL_START + LEFTPANEL_BTN_SIZE * 9) * WSizeY, (LEFTPANEL_PALETTE_WIDTH + LEFTPANEL_RGB_MARGIN * 2 + LEFTPANEL_RGB_WIDTH) * WSizeY, WSizeY);
-    Rectangle(Dc, 0, 0, WSizeX + 1, WSizeY * (LEFTPANEL_START));
+    Rectangle(Dc, 0, 0, LEFTPANEL_BTN_SIZE * WSizeY + 1, WSizeY + 1);
+    Rectangle(Dc, 0, (LEFTPANEL_START + LEFTPANEL_BTN_SIZE * 9) * WSizeY, (LEFTPANEL_PALETTE_WIDTH + LEFTPANEL_RGB_MARGIN * 2 + LEFTPANEL_RGB_WIDTH) * WSizeY, WSizeY + 1);
+    Rectangle(Dc, 0, 0, WSizeX + 1, WSizeY * (LEFTPANEL_START) + 1);
 
     HPEN RGBPen = CreatePen(PS_SOLID, 0.01 * WSizeY, 0);
 
@@ -131,4 +134,13 @@ static void DrawBackground(HDC Dc, uint32_t WSizeX, uint32_t WSizeY) {
 
     Rectangle(Dc, (LEFTPANEL_PALETTE_WIDTH + LEFTPANEL_RGB_MARGIN) * WSizeY, (LEFTPANEL_START + LEFTPANEL_BTN_SIZE * 9 + LEFTPANEL_RGB_MARGIN) * WSizeY, (LEFTPANEL_PALETTE_WIDTH + LEFTPANEL_RGB_MARGIN + LEFTPANEL_RGB_WIDTH) * WSizeY + 1, (LEFTPANEL_START + LEFTPANEL_BTN_SIZE * 9 + LEFTPANEL_RGB_MARGIN + LEFTPANEL_RGB_HEIGHT) * WSizeY + 1);
     DeleteObject(NowRGB);
+}
+
+
+// RESOURCES DELETE
+static void DeleteInterface() {
+    DeleteObject(BgrBrushes[0]), DeleteObject(BgrBrushes[1]);
+    DeleteObject(BgrPens[0]);
+
+    PagesDelete();
 }
