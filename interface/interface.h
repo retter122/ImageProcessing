@@ -17,6 +17,9 @@ static HPEN BgrPens[1] = { 0 };
 
 static uint32_t PALETTE_R = 0, PALETTE_G = 0, PALETTE_B = 0;
 
+static uint32_t PageChosed = 0;
+static float PageImageScale = 1;
+
 
 // LEFTPANEL PARAMS
 #define LEFTPANEL_BTN_SIZE 0.08
@@ -75,7 +78,7 @@ static Edit RGBPalete[] = {
 
 // UPPANEL INTERFACE DATA
 static Button UpPanel[] = {
-    Button(0, 0, UPPANEL_BTN_WIDTH, UPPANEL_BTN_HEIGHT, UPPANEL_FONTSIZE, "New", UPPANEL_SAVE),
+    Button(0, 0, UPPANEL_BTN_WIDTH, UPPANEL_BTN_HEIGHT, UPPANEL_FONTSIZE, "New", UPPANEL_NEW),
     Button(UPPANEL_BTN_WIDTH, 0, UPPANEL_BTN_WIDTH, UPPANEL_BTN_HEIGHT, UPPANEL_FONTSIZE, "Save", UPPANEL_SAVE),
     Button(UPPANEL_BTN_WIDTH * 2, 0, UPPANEL_BTN_WIDTH, UPPANEL_BTN_HEIGHT, UPPANEL_FONTSIZE, "Load", UPPANEL_LOAD),
     Button(UPPANEL_BTN_WIDTH * 3, 0, UPPANEL_BTN_WIDTH, UPPANEL_BTN_HEIGHT, UPPANEL_FONTSIZE, "Params", UPPANEL_PARAMS),
@@ -115,6 +118,36 @@ static void UpdateInterface(float Scale) {
 }
 
 
+// DRAW PALETE COLOR
+static void DrawPaleteColor(HDC Dc, uint32_t WSizeX, uint32_t WSizeY) {
+    HPEN RGBPen = CreatePen(PS_SOLID, 0.01 * WSizeY, 0);
+
+    PALETTE_R = RGBPalete[0].get_number(), PALETTE_G = RGBPalete[1].get_number(), PALETTE_B = RGBPalete[2].get_number();
+    HBRUSH NowRGB = CreateSolidBrush(RGB( PALETTE_R,  PALETTE_G,  PALETTE_B));
+
+    SelectObject(Dc, NowRGB), SelectObject(Dc, RGBPen);
+
+    Rectangle(Dc, (LEFTPANEL_PALETTE_WIDTH + LEFTPANEL_RGB_MARGIN) * WSizeY, (LEFTPANEL_START + LEFTPANEL_BTN_SIZE * 9 + LEFTPANEL_RGB_MARGIN) * WSizeY, (LEFTPANEL_PALETTE_WIDTH + LEFTPANEL_RGB_MARGIN + LEFTPANEL_RGB_WIDTH) * WSizeY + 1, (LEFTPANEL_START + LEFTPANEL_BTN_SIZE * 9 + LEFTPANEL_RGB_MARGIN + LEFTPANEL_RGB_HEIGHT) * WSizeY + 1);
+    DeleteObject(NowRGB), DeleteObject(RGBPen);
+}
+
+
+// DRAW PAGE FUNCTION
+static void DrawPageImage(HDC Dc, uint32_t WSizeX, uint32_t WSizeY, float Scale, const Image& Img) {
+    uint32_t ImgSX = (float)Img.get_width() * Scale, ImgSY = (float)Img.get_height() * Scale;
+
+    BitmapImage DrawImg = ImageToBitmap(Img);
+    DrawImg.resize(ImgSX, ImgSY);
+
+    HDC MDc = CreateCompatibleDC(Dc);
+    DrawImg.update_bitmap(0);
+    SelectObject(MDc, DrawImg.get_bitmap());
+
+    BitBlt(Dc, (WSizeX - ImgSX) / 2, (WSizeY - ImgSY) / 2, (WSizeX - ImgSX) / 2 + ImgSX, (WSizeY - ImgSY) / 2 + ImgSY, MDc, 0, 0, SRCCOPY);
+    DeleteDC(MDc);
+}
+
+
 // DRAW BACKGROUND FUNCTION
 static void DrawBackground(HDC Dc, uint32_t WSizeX, uint32_t WSizeY) {
     SelectObject(Dc, BgrBrushes[0]), SelectObject(Dc, BgrPens[0]);
@@ -125,15 +158,9 @@ static void DrawBackground(HDC Dc, uint32_t WSizeX, uint32_t WSizeY) {
     Rectangle(Dc, 0, (LEFTPANEL_START + LEFTPANEL_BTN_SIZE * 9) * WSizeY, (LEFTPANEL_PALETTE_WIDTH + LEFTPANEL_RGB_MARGIN * 2 + LEFTPANEL_RGB_WIDTH) * WSizeY, WSizeY + 1);
     Rectangle(Dc, 0, 0, WSizeX + 1, WSizeY * (LEFTPANEL_START) + 1);
 
-    HPEN RGBPen = CreatePen(PS_SOLID, 0.01 * WSizeY, 0);
+    DrawPaleteColor(Dc, WSizeX, WSizeY);
 
-    PALETTE_R = RGBPalete[0].get_number(), PALETTE_G = RGBPalete[1].get_number(), PALETTE_B = RGBPalete[2].get_number();
-    HBRUSH NowRGB = CreateSolidBrush(RGB( PALETTE_R,  PALETTE_G,  PALETTE_B));
-
-    SelectObject(Dc, NowRGB), SelectObject(Dc, RGBPen);
-
-    Rectangle(Dc, (LEFTPANEL_PALETTE_WIDTH + LEFTPANEL_RGB_MARGIN) * WSizeY, (LEFTPANEL_START + LEFTPANEL_BTN_SIZE * 9 + LEFTPANEL_RGB_MARGIN) * WSizeY, (LEFTPANEL_PALETTE_WIDTH + LEFTPANEL_RGB_MARGIN + LEFTPANEL_RGB_WIDTH) * WSizeY + 1, (LEFTPANEL_START + LEFTPANEL_BTN_SIZE * 9 + LEFTPANEL_RGB_MARGIN + LEFTPANEL_RGB_HEIGHT) * WSizeY + 1);
-    DeleteObject(NowRGB);
+    if (PagesNum > PageChosed) DrawPageImage(Dc, WSizeX, WSizeY, PageImageScale, ImagePages[PageChosed].PgImage);
 }
 
 
@@ -143,4 +170,10 @@ static void DeleteInterface() {
     DeleteObject(BgrPens[0]);
 
     PagesDelete();
+}
+
+
+// NEW BUTTON FUNCTION
+static void NewPageEvent(HWND Handle, float Scale) {
+    AddNewPage(Handle, Scale, 100, 100);
 }

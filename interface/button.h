@@ -56,9 +56,10 @@ class Button {
 
         void operator=(const Button& _obj) {
             this->XPos = _obj.XPos, this->YPos = _obj.YPos, this->XSize = _obj.XSize, this->YSize = _obj.YSize;
-            this->BtnHandle = _obj.BtnHandle, this->unique_id = _obj.unique_id, this->FontSize = _obj.FontSize, this->FontHandle = 0;
+            this->BtnHandle = 0, this->unique_id = _obj.unique_id, this->FontSize = _obj.FontSize, this->FontHandle = 0;
             this->Text = _obj.Text, this->ImageBtn = _obj.ImageBtn;
         }
 
-        ~Button() { DeleteObject(this->FontHandle); }
+        void Destroy() { DestroyWindow(this->BtnHandle); }
+        ~Button() { DeleteObject(this->FontHandle), this->Destroy(); }
 };

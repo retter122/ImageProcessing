@@ -98,6 +98,7 @@ class BitmapImage {
         uint32_t get_height() const { return this->BMI.bmiHeader.biHeight; }
         uint32_t *get_bytes() const { return this->bytes; }
         HBITMAP get_bitmap() const { return this->HBm; }
+        BITMAPINFO get_bmi() const { return this->BMI; }
 
         void update_bitmap(HDC Dc) { 
             if (!this->bytes) return;
@@ -149,3 +150,18 @@ class BitmapImage {
             DeleteObject(this->HBm);
         }
 };
+
+
+// IMAGE CONVERT FUNCTIONS
+static BitmapImage ImageToBitmap(const Image& _Img) {
+    float (*img_bytes)[4] = _Img.get_bytes();
+    if (!img_bytes) return BitmapImage();
+
+    uint32_t bytes_num = _Img.get_width() * _Img.get_height();
+    uint32_t* bitmap_bytes = new uint32_t[bytes_num];
+    for (uint32_t i = 0; i < bytes_num; ++i) bitmap_bytes[i] = ToU32RGB(img_bytes[i][0], img_bytes[i][1], img_bytes[i][2]);
+
+    BitmapImage out(_Img.get_width(), _Img.get_height(), bitmap_bytes);
+    delete[] bitmap_bytes;
+    return out;
+}

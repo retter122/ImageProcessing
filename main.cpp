@@ -1,6 +1,7 @@
 #include <iostream>
 #include <windows.h>
 #include <ctime>
+#include <cmath>
 
 #include "./interface/interface.h"
 
@@ -15,17 +16,17 @@ static const char WName[] = "Image Processing";
 #define WSizeScreenAsp 3 / 4
 #define WPosScreenAsp 1 / 6
 
-#define FPS_SLEEP 10
-
 
 // WINDOW DATA
-static WNDCLASSA WClass = { CS_HREDRAW | CS_VREDRAW, WProc, 0, 0, 0, 0, 0, (HBRUSH)NULL_BRUSH, 0, "Image Processing" };
+static WNDCLASSA WClass = { CS_HREDRAW | CS_VREDRAW, WProc, 0, 0, 0, 0, 0, 0, 0, "Image Processing" };
 static MSG Msg = { 0 };
 
-static HDC Dc = 0;
+static HDC Dc = 0, MemDC = 0;
+static HBITMAP MemBm = 0;
 static PAINTSTRUCT PStruct = { 0 };
 
 static RECT WSize = { 0 };
+
 
 // MAIN FUNCTION
 int main() {
@@ -33,20 +34,15 @@ int main() {
 
     // WINDOW INIT
     if (!RegisterClassA(&WClass));
-    ShowWindow(CreateWindowExA(0, WClass.lpszClassName, WName, WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN, WSize.right * WPosScreenAsp, WSize.bottom * WPosScreenAsp, WSize.right, WSize.bottom, 0, 0, 0, 0), SW_SHOWNORMAL);
+    ShowWindow(CreateWindowExA(WS_EX_COMPOSITED, WClass.lpszClassName, WName, WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN, WSize.right * WPosScreenAsp, WSize.bottom * WPosScreenAsp, WSize.right, WSize.bottom, 0, 0, 0, 0), SW_SHOWNORMAL);
 
     // APP MAIN CYCLE
     int32_t last_time = clock();
-    while (1) {
-        if (PeekMessageA(&Msg, 0, 0, 0, PM_REMOVE)) {
-            DispatchMessageA(&Msg);
-            TranslateMessage(&Msg);
+    while (GetMessageA(&Msg, 0, 0, 0)) {
+        DispatchMessageA(&Msg);
+        TranslateMessage(&Msg);
 
-            if (Msg.message == WM_QUIT) break;
-        } else {
-            Sleep(std::max(0, FPS_SLEEP - ((int32_t)clock() - last_time)));
-            last_time = clock();
-        }
+        if (Msg.message == WM_QUIT) break;
     } DeleteInterface();
 
     return 0;
@@ -64,6 +60,16 @@ static LRESULT WProc(HWND hWnd, UINT Mess, WPARAM WPar, LPARAM LPar) {
         // COMMAND EVENT
         case (WM_COMMAND):
             InvalidateRect(hWnd, &WSize, FALSE);
+
+            if ((WPar & 0xFFFF) == UPPANEL_NEW) NewPageEvent(hWnd, WSize.bottom);
+
+            for (uint32_t i = 0; i < PagesNum; ++i) {
+                if (ImagePages[i].get_close_id() == (WPar & 0xFFFF)) {
+                    ClosePage(hWnd, WSize.bottom, i);
+                    break;
+                } else if (ImagePages[i].get_button_id() == (WPar & 0xFFFF)) PageChosed = i;
+            }
+
             break;
 
         // WINDOW CREATE EVENT
@@ -74,15 +80,20 @@ static LRESULT WProc(HWND hWnd, UINT Mess, WPARAM WPar, LPARAM LPar) {
         // WINDOW RESIZE EVENT
         case (WM_SIZE):
             WSize.right = LPar & 0xFFFF, WSize.bottom = ((LPar >> 16) & 0xFFFF);
+            UpdateInterface(WSize.bottom);
             break;
 
         // PAINT EVENT
         case (WM_PAINT):
-            UpdateInterface(WSize.bottom);
-
             Dc = BeginPaint(hWnd, &PStruct);
-            DrawBackground(Dc, WSize.right, WSize.bottom);
+            MemDC = CreateCompatibleDC(Dc);
+            MemBm = CreateCompatibleBitmap(Dc, WSize.right, WSize.bottom);
+            SelectObject(MemDC, MemBm);
 
+            DrawBackground(MemDC, WSize.right, WSize.bottom);
+
+            BitBlt(Dc, 0, 0, WSize.right, WSize.bottom, MemDC, 0, 0, SRCCOPY);
+            DeleteDC(MemDC), DeleteObject(MemBm);
             EndPaint(hWnd, &PStruct);
             break;
 

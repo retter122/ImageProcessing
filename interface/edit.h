@@ -3,6 +3,7 @@
 #include <iostream>
 #include <windows.h>
 #include <stdint.h>
+#include <string>
 
 
 // EDIT CLASS
@@ -55,5 +56,6 @@ class Edit {
             SendMessage(this->Handle, WM_SETFONT, (WPARAM)HFont, true);
         }
 
-        ~Edit() { DeleteObject(this->HFont); }
+        void Destroy() { DestroyWindow(this->Handle); }
+        ~Edit() { DeleteObject(this->HFont), this->Destroy(); }
 };
