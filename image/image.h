@@ -73,6 +73,15 @@ class Image {
             for (uint32_t i = 0; i < bytes_num; ++i) this->bytes[i][0] *= mask_bytes[i], this->bytes[i][1] *= mask_bytes[i], this->bytes[i][2] *= mask_bytes[i], this->bytes[i][3] *= mask_bytes[i];
         }
 
+        void draw_elipse(int32_t PX, int32_t PY, int32_t SX, int32_t SY, float R, float G, float B) {
+            PY = this->height - PY;
+
+            for (int32_t i = std::max(PY - SX, 0); i < std::min(PY + SX, (int32_t)this->height); ++i) {
+                int32_t rd = sqrt(SX * SX - (PY - i) * (PY - i));
+                for (int32_t j = std::max(PX - rd, 0); j < std::min(PX + rd, (int32_t)this->width); ++j) this->bytes[i * this->width + j][0] = R, this->bytes[i * this->width + j][1] = G, this->bytes[i * this->width + j][2] = B;
+            }
+        }
+
         void operator=(const Image& _obj) {
             this->width = _obj.width, this->height = _obj.height;
             this->copy_bytes(_obj.bytes);
@@ -159,7 +168,7 @@ static BitmapImage ImageToBitmap(const Image& _Img) {
 
     uint32_t bytes_num = _Img.get_width() * _Img.get_height();
     uint32_t* bitmap_bytes = new uint32_t[bytes_num];
-    for (uint32_t i = 0; i < bytes_num; ++i) bitmap_bytes[i] = ToU32RGB(img_bytes[i][0], img_bytes[i][1], img_bytes[i][2]);
+    for (uint32_t i = 0; i < bytes_num; ++i) bitmap_bytes[i] = ToU32RGB(img_bytes[i][0] * 255, img_bytes[i][1] * 255, img_bytes[i][2] * 255);
 
     BitmapImage out(_Img.get_width(), _Img.get_height(), bitmap_bytes);
     delete[] bitmap_bytes;

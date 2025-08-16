@@ -1,8 +1,9 @@
 #pragma once
 
-#include <windows.h>
 #include <iostream>
+#include <windows.h>
 #include <stdint.h>
+#include <cmath>
 
 #include "./button.h"
 #include "./edit.h"
@@ -15,10 +16,14 @@
 static HBRUSH BgrBrushes[2] = { 0, 0 };
 static HPEN BgrPens[1] = { 0 };
 
-static uint32_t PALETTE_R = 0, PALETTE_G = 0, PALETTE_B = 0;
+static uint8_t PALETTE_R = 0, PALETTE_G = 0, PALETTE_B = 0;
 
 static uint32_t PageChosed = 0;
 static float PageImageScale = 1;
+
+static int16_t ImageXPos = 0, ImageYPos = 0;
+
+static uint16_t PenWidth = 2;
 
 
 // LEFTPANEL PARAMS
@@ -143,7 +148,9 @@ static void DrawPageImage(HDC Dc, uint32_t WSizeX, uint32_t WSizeY, float Scale,
     DrawImg.update_bitmap(0);
     SelectObject(MDc, DrawImg.get_bitmap());
 
-    BitBlt(Dc, (WSizeX - ImgSX) / 2, (WSizeY - ImgSY) / 2, (WSizeX - ImgSX) / 2 + ImgSX, (WSizeY - ImgSY) / 2 + ImgSY, MDc, 0, 0, SRCCOPY);
+    int32_t DrawX = (WSizeX - ImgSX) / 2 + ImageXPos, DrawY = (WSizeY - ImgSY) / 2 + ImageYPos;
+
+    BitBlt(Dc, DrawX, DrawY, WSizeX, WSizeY, MDc, 0, 0, SRCCOPY);
     DeleteDC(MDc);
 }
 
@@ -153,14 +160,14 @@ static void DrawBackground(HDC Dc, uint32_t WSizeX, uint32_t WSizeY) {
     SelectObject(Dc, BgrBrushes[0]), SelectObject(Dc, BgrPens[0]);
     Rectangle(Dc, 0, 0, WSizeX + 1, WSizeY + 1);
 
+    if (PagesNum > PageChosed) DrawPageImage(Dc, WSizeX, WSizeY, PageImageScale, ImagePages[PageChosed].get_actual_img());
+
     SelectObject(Dc, BgrBrushes[1]);
     Rectangle(Dc, 0, 0, LEFTPANEL_BTN_SIZE * WSizeY + 1, WSizeY + 1);
     Rectangle(Dc, 0, (LEFTPANEL_START + LEFTPANEL_BTN_SIZE * 9) * WSizeY, (LEFTPANEL_PALETTE_WIDTH + LEFTPANEL_RGB_MARGIN * 2 + LEFTPANEL_RGB_WIDTH) * WSizeY, WSizeY + 1);
     Rectangle(Dc, 0, 0, WSizeX + 1, WSizeY * (LEFTPANEL_START) + 1);
 
     DrawPaleteColor(Dc, WSizeX, WSizeY);
-
-    if (PagesNum > PageChosed) DrawPageImage(Dc, WSizeX, WSizeY, PageImageScale, ImagePages[PageChosed].PgImage);
 }
 
 

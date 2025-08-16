@@ -16,6 +16,8 @@ static const char WName[] = "Image Processing";
 #define WSizeScreenAsp 3 / 4
 #define WPosScreenAsp 1 / 6
 
+#define MOUSEWHELL_SENSIVITY (1.f / 360.f)
+
 
 // WINDOW DATA
 static WNDCLASSA WClass = { CS_HREDRAW | CS_VREDRAW, WProc, 0, 0, 0, 0, 0, 0, 0, "Image Processing" };
@@ -26,6 +28,9 @@ static HBITMAP MemBm = 0;
 static PAINTSTRUCT PStruct = { 0 };
 
 static RECT WSize = { 0 };
+
+static uint8_t NowInstrument = LEFTPANEL_CURSOR;
+static int16_t LastMousePX = -1, LastMousePY = -1;
 
 
 // MAIN FUNCTION
@@ -61,7 +66,16 @@ static LRESULT WProc(HWND hWnd, UINT Mess, WPARAM WPar, LPARAM LPar) {
         case (WM_COMMAND):
             InvalidateRect(hWnd, &WSize, FALSE);
 
-            if ((WPar & 0xFFFF) == UPPANEL_NEW) NewPageEvent(hWnd, WSize.bottom);
+            switch((WPar & 0xFFFF)) {
+                case(UPPANEL_NEW):
+                    NewPageEvent(hWnd, WSize.bottom);
+                    break;
+
+                case(LEFTPANEL_PEN):
+                case(LEFTPANEL_CURSOR):
+                    NowInstrument = (WPar & 0xFFFF);
+                    break;
+            }
 
             for (uint32_t i = 0; i < PagesNum; ++i) {
                 if (ImagePages[i].get_close_id() == (WPar & 0xFFFF)) {
@@ -70,6 +84,35 @@ static LRESULT WProc(HWND hWnd, UINT Mess, WPARAM WPar, LPARAM LPar) {
                 } else if (ImagePages[i].get_button_id() == (WPar & 0xFFFF)) PageChosed = i;
             }
 
+            break;
+
+        // MOUSEDOWN EVENT
+        case (WM_LBUTTONDOWN):
+            LastMousePX = LPar & 0xFFFF, LastMousePY = (LPar >> 16) & 0xFFFF;
+            if (NowInstrument == LEFTPANEL_PEN && PagesNum > PageChosed) ImagePages[PageChosed].new_action();
+            break;
+
+        // MOSEMOVE EVENT
+        case (WM_MOUSEMOVE):
+            InvalidateRect(hWnd, &WSize, FALSE);
+            if (WPar == MK_LBUTTON) {
+                int16_t NowMX = (LPar & 0xFFFF), NowMY = ((LPar >> 16) & 0xFFFF);
+
+                if (NowInstrument == LEFTPANEL_CURSOR) {
+                    ImageXPos += NowMX - LastMousePX, ImageYPos += NowMY - LastMousePY;
+                    LastMousePX = NowMX, LastMousePY = NowMY;
+                } else if (NowInstrument == LEFTPANEL_PEN && PagesNum > PageChosed) {
+                    int32_t DX = (WSize.right - ImagePages[PageChosed].get_actual_img().get_width() * PageImageScale) / 2 + ImageXPos, DY = (WSize.bottom - ImagePages[PageChosed].get_actual_img().get_height() * PageImageScale) / 2 + ImageYPos;
+                    ImagePages[PageChosed].get_actual_img().draw_elipse((NowMX - DX) / PageImageScale, (NowMY - DY) / PageImageScale, PenWidth, PenWidth, (float)PALETTE_R / 255.f, (float)PALETTE_G / 255.f, (float)PALETTE_B / 255.f);
+                }
+            }
+            
+            break;
+
+        // MOUSE WHEEL MOVE
+        case (WM_MOUSEWHEEL):
+            PageImageScale *= pow(1.5, (float)GET_WHEEL_DELTA_WPARAM(WPar) * MOUSEWHELL_SENSIVITY);
+            InvalidateRect(hWnd, &WSize, FALSE);
             break;
 
         // WINDOW CREATE EVENT
