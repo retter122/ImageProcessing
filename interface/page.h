@@ -32,7 +32,7 @@ struct Page {
             if (this->PgImage) delete[] this->PgImage;
             this->PgImage = new Image[this->ImagesNum];
 
-            for (uint32_t i = 0; i < this->ImagesNum; ++i) this->PgImage[i] = _imgs[i];
+            for (int32_t i = 0; i < this->ImagesNum; ++i) this->PgImage[i] = _imgs[i];
         }
 
     public:
@@ -54,7 +54,7 @@ struct Page {
             this->ImagesNum = this->ActualImage + 1;
 
             Image* NewImage = new Image[this->ImagesNum + 1];
-            for (uint32_t i = 0; i < this->ImagesNum; ++i) NewImage[i] = this->PgImage[i];
+            for (int32_t i = 0; i < this->ImagesNum; ++i) NewImage[i] = this->PgImage[i];
 
             if (this->PgImage) {
                 NewImage[this->ImagesNum] = this->PgImage[this->ImagesNum - 1];

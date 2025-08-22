@@ -43,7 +43,6 @@ int main() {
     ShowWindow(CreateWindowExA(WS_EX_COMPOSITED, WClass.lpszClassName, WName, WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN, WSize.right * WPosScreenAsp, WSize.bottom * WPosScreenAsp, WSize.right, WSize.bottom, 0, 0, 0, 0), SW_SHOWNORMAL);
 
     // APP MAIN CYCLE
-    int32_t last_time = clock();
     while (GetMessageA(&Msg, 0, 0, 0)) {
         DispatchMessageA(&Msg);
         TranslateMessage(&Msg);

@@ -6,10 +6,6 @@
 #include "../image/image.h"
 
 
-// BUTTONS DATA
-static uint32_t next_unique_id = 1;
-
-
 // BUTTON CONTAINER
 class Button {
     private:
