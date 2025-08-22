@@ -32,6 +32,8 @@ static RECT WSize = { 0 };
 static uint8_t NowInstrument = LEFTPANEL_CURSOR;
 static int16_t LastMousePX = -1, LastMousePY = -1;
 
+static uint8_t CtrlPressed = 0;
+
 
 // MAIN FUNCTION
 int main() {
@@ -62,6 +64,14 @@ static LRESULT WProc(HWND hWnd, UINT Mess, WPARAM WPar, LPARAM LPar) {
             PostQuitMessage(0);
             break;
 
+        // KEYDOWN COMMAND
+        case (WM_KEYDOWN):
+            if ((WPar & 0xFF) == VK_CONTROL) CtrlPressed = 1;
+            else if ((WPar & 0xFF) == 'Z' && CtrlPressed && PageChosed < PagesNum) ImagePages[PageChosed].undo();
+            else if ((WPar & 0xFF) == 'Y' && CtrlPressed && PageChosed < PagesNum) ImagePages[PageChosed].redo();
+            InvalidateRect(hWnd, &WSize, FALSE);
+            break;
+
         // COMMAND EVENT
         case (WM_COMMAND):
             InvalidateRect(hWnd, &WSize, FALSE);
@@ -71,8 +81,11 @@ static LRESULT WProc(HWND hWnd, UINT Mess, WPARAM WPar, LPARAM LPar) {
                     NewPageEvent(hWnd, WSize.bottom);
                     break;
 
-                case(LEFTPANEL_PEN):
                 case(LEFTPANEL_CURSOR):
+                case(LEFTPANEL_PEN):
+                case(LEFTPANEL_RECTANGLE):
+                case(LEFTPANEL_FILLED_RECTANGLE):
+                case(LEFTPANEL_ELLIPSE):
                     NowInstrument = (WPar & 0xFFFF);
                     break;
             }
@@ -89,7 +102,7 @@ static LRESULT WProc(HWND hWnd, UINT Mess, WPARAM WPar, LPARAM LPar) {
         // MOUSEDOWN EVENT
         case (WM_LBUTTONDOWN):
             LastMousePX = LPar & 0xFFFF, LastMousePY = (LPar >> 16) & 0xFFFF;
-            if (NowInstrument == LEFTPANEL_PEN && PagesNum > PageChosed) ImagePages[PageChosed].new_action();
+            if ((NowInstrument >= LEFTPANEL_PEN || NowInstrument <= LEFTPANEL_BLUR) && PagesNum > PageChosed) ImagePages[PageChosed].new_action();
             break;
 
         // MOSEMOVE EVENT
@@ -104,6 +117,21 @@ static LRESULT WProc(HWND hWnd, UINT Mess, WPARAM WPar, LPARAM LPar) {
                 } else if (NowInstrument == LEFTPANEL_PEN && PagesNum > PageChosed) {
                     int32_t DX = (WSize.right - ImagePages[PageChosed].get_actual_img().get_width() * PageImageScale) / 2 + ImageXPos, DY = (WSize.bottom - ImagePages[PageChosed].get_actual_img().get_height() * PageImageScale) / 2 + ImageYPos;
                     ImagePages[PageChosed].get_actual_img().draw_elipse((NowMX - DX) / PageImageScale, (NowMY - DY) / PageImageScale, PenWidth, PenWidth, (float)PALETTE_R / 255.f, (float)PALETTE_G / 255.f, (float)PALETTE_B / 255.f);
+                } else if (NowInstrument == LEFTPANEL_RECTANGLE && PagesNum > PageChosed) {
+                    ImagePages[PageChosed].update_actual_img();
+
+                    int32_t DX = (WSize.right - ImagePages[PageChosed].get_actual_img().get_width() * PageImageScale) / 2 + ImageXPos, DY = (WSize.bottom - ImagePages[PageChosed].get_actual_img().get_height() * PageImageScale) / 2 + ImageYPos;
+                    ImagePages[PageChosed].get_actual_img().draw_rect((LastMousePX - DX) / PageImageScale, (LastMousePY - DY) / PageImageScale, (NowMX - DX) / PageImageScale, (NowMY - DY) / PageImageScale, PenWidth, (float)PALETTE_R / 255.f, (float)PALETTE_G / 255.f, (float)PALETTE_B / 255.f);
+                } else if (NowInstrument == LEFTPANEL_FILLED_RECTANGLE && PagesNum > PageChosed) {
+                    ImagePages[PageChosed].update_actual_img();
+
+                    int32_t DX = (WSize.right - ImagePages[PageChosed].get_actual_img().get_width() * PageImageScale) / 2 + ImageXPos, DY = (WSize.bottom - ImagePages[PageChosed].get_actual_img().get_height() * PageImageScale) / 2 + ImageYPos;
+                    ImagePages[PageChosed].get_actual_img().draw_filled_rect((LastMousePX - DX) / PageImageScale, (LastMousePY - DY) / PageImageScale, (NowMX - DX) / PageImageScale, (NowMY - DY) / PageImageScale, (float)PALETTE_R / 255.f, (float)PALETTE_G / 255.f, (float)PALETTE_B / 255.f);
+                } else if (NowInstrument == LEFTPANEL_ELLIPSE && PagesNum > PageChosed) {
+                    ImagePages[PageChosed].update_actual_img();
+
+                    int32_t DX = (WSize.right - ImagePages[PageChosed].get_actual_img().get_width() * PageImageScale) / 2 + ImageXPos, DY = (WSize.bottom - ImagePages[PageChosed].get_actual_img().get_height() * PageImageScale) / 2 + ImageYPos;
+                    ImagePages[PageChosed].get_actual_img().draw_circle((LastMousePX - DX) / PageImageScale, (LastMousePY - DY) / PageImageScale, abs(NowMX - LastMousePX) / PageImageScale, abs(NowMY - LastMousePY) / PageImageScale, PenWidth, (float)PALETTE_R / 255.f, (float)PALETTE_G / 255.f, (float)PALETTE_B / 255.f);
                 }
             }
             

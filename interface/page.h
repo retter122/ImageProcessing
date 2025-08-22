@@ -26,7 +26,7 @@ struct Page {
         Button PgButton, PgClose;
 
         Image* PgImage;
-        uint32_t ImagesNum, ActualImage;
+        int32_t ImagesNum, ActualImage;
 
         void copy_images(Image* _imgs) {
             if (this->PgImage) delete[] this->PgImage;
@@ -37,7 +37,7 @@ struct Page {
 
     public:
 
-        Page(): PgButton(), ImagesNum(0), ActualImage(0), PgClose(), PgImage(0) {}
+        Page(): PgButton(), ImagesNum(0), ActualImage(-1), PgClose(), PgImage(0) {}
         Page(uint32_t width, uint32_t height, const std::string& Name, uint32_t id) : PgImage(new Image[1]), ImagesNum(1), ActualImage(0), PgButton((PAGES_BTN_WIDTH + PAGES_CLOSE_WIDTH) * id, PAGES_START, PAGES_BTN_WIDTH, PAGES_HEIGHT, PAGES_FONTSIZE, Name, id * 2 + PAGES_BTN_START_ID), PgClose((PAGES_BTN_WIDTH + PAGES_CLOSE_WIDTH) * id + PAGES_BTN_WIDTH, PAGES_START, PAGES_CLOSE_WIDTH, PAGES_HEIGHT, PAGES_FONTSIZE, "x", id * 2 + 1 + PAGES_BTN_START_ID) { this->PgImage[0] = Image(width, height, 0); }
         Page(const Page& _obj) : PgButton(_obj.PgButton), ImagesNum(_obj.ImagesNum), ActualImage(_obj.ActualImage), PgImage(0) { this->copy_images(_obj.PgImage); }
 
@@ -51,6 +51,8 @@ struct Page {
 
         void set_name(const std::string& _name) { this->PgButton.Text = _name; }
         void new_action() {
+            this->ImagesNum = this->ActualImage + 1;
+
             Image* NewImage = new Image[this->ImagesNum + 1];
             for (uint32_t i = 0; i < this->ImagesNum; ++i) NewImage[i] = this->PgImage[i];
 
@@ -65,9 +67,19 @@ struct Page {
             this->PgButton = Button((PAGES_BTN_WIDTH + PAGES_CLOSE_WIDTH) * id, PAGES_START, PAGES_BTN_WIDTH, PAGES_HEIGHT, PAGES_FONTSIZE, this->PgButton.Text, id * 2 + PAGES_BTN_START_ID);
             this->PgClose = Button((PAGES_BTN_WIDTH + PAGES_CLOSE_WIDTH) * id + PAGES_BTN_WIDTH, PAGES_START, PAGES_CLOSE_WIDTH, PAGES_HEIGHT, PAGES_FONTSIZE, "x", id * 2 + 1 + PAGES_BTN_START_ID);
         }
+        void update_actual_img() {
+            if (this->ActualImage >= this->ImagesNum) return;
+            std::cout << this->ActualImage << std::endl;
+
+            if (this->ActualImage > 0) this->PgImage[this->ActualImage] = this->PgImage[this->ActualImage - 1];
+            else this->PgImage[0].clear();
+        }
 
         void Show(float Scale, HWND Parent) { this->PgButton.Show(Scale, Parent), this->PgClose.Show(Scale, Parent); }
         void Update(float Scale) { this->PgButton.Update(Scale), this->PgClose.Update(Scale); }
+
+        void undo() { if (this->ActualImage > 0) --this->ActualImage; }
+        void redo() { if (this->ActualImage < this->ImagesNum - 1) ++this->ActualImage; }
 
         void operator=(const Page& _obj) {
             this->PgButton = _obj.PgButton, this->PgClose = _obj.PgClose;

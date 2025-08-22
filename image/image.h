@@ -82,6 +82,35 @@ class Image {
             }
         }
 
+        void draw_circle(int32_t PX, int32_t PY, int32_t SX, int32_t SY, int32_t Wid, float R, float G, float B) {
+            PY = this->height - PY;
+
+            for (int32_t i = std::max(PY - SX, 0); i < std::min(PY + SX, (int32_t)this->height); ++i) {
+                int32_t rd1 = sqrt(SX * SX - (PY - i) * (PY - i)), rd2 = (SX - Wid) > abs(PY - i) ? (sqrt((SX - Wid) * (SX - Wid) - (PY - i) * (PY - i))) : 0;
+
+                for (int32_t j = std::max(PX - rd1, 0); j < std::min(PX - rd2, (int32_t)this->width); ++j) this->bytes[i * this->width + j][0] = R, this->bytes[i * this->width + j][1] = G, this->bytes[i * this->width + j][2] = B;
+                for (int32_t j = std::max(PX + rd2, 0); j < std::min(PX + rd1, (int32_t)this->width); ++j) this->bytes[i * this->width + j][0] = R, this->bytes[i * this->width + j][1] = G, this->bytes[i * this->width + j][2] = B;
+            }
+        }
+
+        void draw_rect(int32_t X1, int32_t Y1, int32_t X2, int32_t Y2, uint32_t Width, float R, float G, float B) {
+            for (uint32_t i = std::min(X1, X2); i < std::max(X2, X1); ++i) {
+                this->draw_elipse(i, Y1, Width, Width, R, G, B);
+                this->draw_elipse(i, Y2, Width, Width, R, G, B);
+            } for (uint32_t i = std::min(Y1, Y2); i < std::max(Y2, Y1); ++i) {
+                this->draw_elipse(X1, i, Width, Width, R, G, B);
+                this->draw_elipse(X2, i, Width, Width, R, G, B);
+            }
+        }
+
+        void draw_filled_rect(int32_t X1, int32_t Y1, int32_t X2, int32_t Y2, float R, float G, float B) {
+            Y1 = this->height - Y1, Y2 = this->height - Y2;
+
+            for (int32_t i = std::max(std::min(Y1, Y2), 0); i < std::min(std::max(Y2, Y1), (int32_t)this->height); ++i) {
+                for (int32_t j = std::max(std::min(X1, X2), 0); j < std::min(std::max(X2, X1), (int32_t)this->width); ++j) this->bytes[j + i * this->width][0] = R, this->bytes[j + i * this->width][1] = G, this->bytes[j + i * this->width][2] = B; 
+            }
+        }
+
         void operator=(const Image& _obj) {
             this->width = _obj.width, this->height = _obj.height;
             this->copy_bytes(_obj.bytes);
