@@ -24,6 +24,7 @@ static float PageImageScale = 1;
 static int16_t ImageXPos = 0, ImageYPos = 0;
 
 static uint16_t PenWidth = 2;
+static int16_t LastMousePX = -1, LastMousePY = -1;
 
 
 // LEFTPANEL PARAMS
@@ -186,8 +187,77 @@ static void NewPageEvent(HWND Handle, float Scale) {
 }
 
 
+// CURSOR INSTRUMENT FUNCTION
+static void CursorInstrument(int32_t NowMx, int32_t NowMy) {
+    ImageXPos += NowMx - LastMousePX, ImageYPos += NowMy - LastMousePY;
+    LastMousePX = NowMx, LastMousePY = NowMy;
+}
+
+
 // PEN INSTRUMENT FUNCTION
 static void PenInstrument(int32_t Mx, int32_t My, int32_t WSizeX, int32_t WSizeY) {
     int32_t DX = (WSizeX - ImagePages[PageChosed].get_actual_img().get_width() * PageImageScale) / 2 + ImageXPos, DY = (WSizeY - ImagePages[PageChosed].get_actual_img().get_height() * PageImageScale) / 2 + ImageYPos;
     ImagePages[PageChosed].get_actual_img().draw_elipse((Mx - DX) / PageImageScale, (My - DY) / PageImageScale, PenWidth, PenWidth, (float)PALETTE_R / 255.f, (float)PALETTE_G / 255.f, (float)PALETTE_B / 255.f);
+}
+
+
+// RECTANGLE INSTRUMENT FUNCTION
+static void RectangleInstrument(int32_t Mx, int32_t My, int32_t WSizeX, int32_t WSizeY) {
+    ImagePages[PageChosed].update_actual_img();
+
+    int32_t DX = (WSizeX - ImagePages[PageChosed].get_actual_img().get_width() * PageImageScale) / 2 + ImageXPos, DY = (WSizeY - ImagePages[PageChosed].get_actual_img().get_height() * PageImageScale) / 2 + ImageYPos;
+    ImagePages[PageChosed].get_actual_img().draw_rect((LastMousePX - DX) / PageImageScale, (LastMousePY - DY) / PageImageScale, (Mx - DX) / PageImageScale, (My - DY) / PageImageScale, PenWidth, (float)PALETTE_R / 255.f, (float)PALETTE_G / 255.f, (float)PALETTE_B / 255.f);
+}
+
+
+// FILLED RECTANGLE INSTRUMENT FUNCTION
+static void FilledRectangleInstrument(int32_t Mx, int32_t My, int32_t WSizeX, int32_t WSizeY) {
+    ImagePages[PageChosed].update_actual_img();
+
+    int32_t DX = (WSizeX - ImagePages[PageChosed].get_actual_img().get_width() * PageImageScale) / 2 + ImageXPos, DY = (WSizeY - ImagePages[PageChosed].get_actual_img().get_height() * PageImageScale) / 2 + ImageYPos;
+    ImagePages[PageChosed].get_actual_img().draw_filled_rect((LastMousePX - DX) / PageImageScale, (LastMousePY - DY) / PageImageScale, (Mx - DX) / PageImageScale, (My - DY) / PageImageScale, (float)PALETTE_R / 255.f, (float)PALETTE_G / 255.f, (float)PALETTE_B / 255.f);
+}
+
+
+// ELLIPSE INSTRUMENT FUNCTION
+static void EllipseInstrument(int32_t Mx, int32_t My, int32_t WSizeX, int32_t WSizeY) {
+    ImagePages[PageChosed].update_actual_img();
+
+    int32_t DX = (WSizeX - ImagePages[PageChosed].get_actual_img().get_width() * PageImageScale) / 2 + ImageXPos, DY = (WSizeY - ImagePages[PageChosed].get_actual_img().get_height() * PageImageScale) / 2 + ImageYPos;
+    ImagePages[PageChosed].get_actual_img().draw_circle((LastMousePX - DX) / PageImageScale, (LastMousePY - DY) / PageImageScale, abs(Mx - LastMousePX) / PageImageScale, abs(My - LastMousePY) / PageImageScale, PenWidth, (float)PALETTE_R / 255.f, (float)PALETTE_G / 255.f, (float)PALETTE_B / 255.f); 
+}
+
+
+// FILLED ELLIPSE FUNCTION
+static void FilledEllipseInstrument(int32_t Mx, int32_t My, int32_t WSizeX, int32_t WSizeY) {
+    ImagePages[PageChosed].update_actual_img();
+
+    int32_t DX = (WSizeX - ImagePages[PageChosed].get_actual_img().get_width() * PageImageScale) / 2 + ImageXPos, DY = (WSizeY - ImagePages[PageChosed].get_actual_img().get_height() * PageImageScale) / 2 + ImageYPos;
+    ImagePages[PageChosed].get_actual_img().draw_elipse((LastMousePX - DX) / PageImageScale, (LastMousePY - DY) / PageImageScale, abs(Mx - LastMousePX) / PageImageScale, abs(My - LastMousePY) / PageImageScale, (float)PALETTE_R / 255.f, (float)PALETTE_G / 255.f, (float)PALETTE_B / 255.f);
+}
+
+
+// LINE INSTRUMENT FUNCTION
+static void LineInstrument(int32_t Mx, int32_t My, int32_t WSizeX, int32_t WSizeY) {
+    ImagePages[PageChosed].update_actual_img();
+
+    int32_t DX = (WSizeX - ImagePages[PageChosed].get_actual_img().get_width() * PageImageScale) / 2 + ImageXPos, DY = (WSizeY - ImagePages[PageChosed].get_actual_img().get_height() * PageImageScale) / 2 + ImageYPos;
+    ImagePages[PageChosed].get_actual_img().draw_line((LastMousePX - DX) / PageImageScale, (LastMousePY - DY) / PageImageScale, (Mx - DX) / PageImageScale, (My - DY) / PageImageScale, PenWidth, (float)PALETTE_R / 255.f, (float)PALETTE_G / 255.f, (float)PALETTE_B / 255.f);
+}
+
+
+// PIPETTE INSTRUMENT FUNCTION
+static void PipetteInstrument(int32_t Mx, int32_t My, int32_t WSizeX, int32_t WSizeY) {
+    float (*bytes)[4] = ImagePages[PageChosed].get_actual_img().get_bytes();
+    int32_t ImgWidth = ImagePages[PageChosed].get_actual_img().get_width(), ImgHeight = ImagePages[PageChosed].get_actual_img().get_height();
+
+    int32_t DX = (WSizeX - ImagePages[PageChosed].get_actual_img().get_width() * PageImageScale) / 2 + ImageXPos, DY = (WSizeY - ImagePages[PageChosed].get_actual_img().get_height() * PageImageScale) / 2 + ImageYPos;
+    int32_t PX = (Mx - DX) / PageImageScale, PY = (My - DY) / PageImageScale;
+
+    if (PX >= 0 && PX < ImgWidth && PY >= 0 && PY < ImgHeight) {
+        PY = ImgHeight - PY;
+        PALETTE_R = bytes[PX + PY * ImgWidth][0] * 255.f, PALETTE_G = bytes[PX + PY * ImgWidth][1] * 255.f, PALETTE_B = bytes[PX + PY * ImgWidth][2] * 255.f;
+
+        RGBPalete[0].set_text(std::to_string(PALETTE_R)), RGBPalete[1].set_text(std::to_string(PALETTE_G)), RGBPalete[2].set_text(std::to_string(PALETTE_B));
+    }
 }

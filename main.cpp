@@ -30,7 +30,6 @@ static PAINTSTRUCT PStruct = { 0 };
 static RECT WSize = { 0 };
 
 static uint8_t NowInstrument = LEFTPANEL_CURSOR;
-static int16_t LastMousePX = -1, LastMousePY = -1;
 
 static uint8_t CtrlPressed = 0;
 
@@ -107,20 +106,8 @@ static LRESULT WProc(HWND hWnd, UINT Mess, WPARAM WPar, LPARAM LPar) {
             LastMousePX = LPar & 0xFFFF, LastMousePY = (LPar >> 16) & 0xFFFF;
             if ((NowInstrument >= LEFTPANEL_PEN || NowInstrument <= LEFTPANEL_BLUR) && NowInstrument != LEFTPANEL_PIPETTE && PagesNum > PageChosed) ImagePages[PageChosed].new_action();
             
-            if (NowInstrument == LEFTPANEL_PIPETTE && PagesNum > PageChosed) {
-                float (*bytes)[4] = ImagePages[PageChosed].get_actual_img().get_bytes();
-                int32_t ImgWidth = ImagePages[PageChosed].get_actual_img().get_width(), ImgHeight = ImagePages[PageChosed].get_actual_img().get_height();
-
-                int32_t DX = (WSize.right - ImagePages[PageChosed].get_actual_img().get_width() * PageImageScale) / 2 + ImageXPos, DY = (WSize.bottom - ImagePages[PageChosed].get_actual_img().get_height() * PageImageScale) / 2 + ImageYPos;
-                int32_t PX = (LastMousePX - DX) / PageImageScale, PY = (LastMousePY - DY) / PageImageScale;
-
-                if (PX >= 0 && PX < ImgWidth && PY >= 0 && PY < ImgHeight) {
-                    PY = ImgHeight - PY;
-                    PALETTE_R = bytes[PX + PY * ImgWidth][0] * 255.f, PALETTE_G = bytes[PX + PY * ImgWidth][1] * 255.f, PALETTE_B = bytes[PX + PY * ImgWidth][2] * 255.f;
-
-                    RGBPalete[0].set_text(std::to_string(PALETTE_R)), RGBPalete[1].set_text(std::to_string(PALETTE_G)), RGBPalete[2].set_text(std::to_string(PALETTE_B));
-                }
-            } else if (NowInstrument == LEFTPANEL_PEN && PagesNum > PageChosed) PenInstrument(LastMousePX, LastMousePY, WSize.right, WSize.bottom);
+            if (NowInstrument == LEFTPANEL_PIPETTE && PagesNum > PageChosed) PipetteInstrument(LastMousePX, LastMousePY, WSize.right, WSize.bottom);
+            else if (NowInstrument == LEFTPANEL_PEN && PagesNum > PageChosed) PenInstrument(LastMousePX, LastMousePY, WSize.right, WSize.bottom);
             
             InvalidateRect(hWnd, &WSize, FALSE);
             break;
@@ -131,36 +118,13 @@ static LRESULT WProc(HWND hWnd, UINT Mess, WPARAM WPar, LPARAM LPar) {
             if (WPar == MK_LBUTTON) {
                 int16_t NowMX = (LPar & 0xFFFF), NowMY = ((LPar >> 16) & 0xFFFF);
 
-                if (NowInstrument == LEFTPANEL_CURSOR) {
-                    ImageXPos += NowMX - LastMousePX, ImageYPos += NowMY - LastMousePY;
-                    LastMousePX = NowMX, LastMousePY = NowMY;
-                } else if (NowInstrument == LEFTPANEL_PEN && PagesNum > PageChosed) PenInstrument(NowMX, NowMY, WSize.right, WSize.bottom);
-                else if (NowInstrument == LEFTPANEL_RECTANGLE && PagesNum > PageChosed) {
-                    ImagePages[PageChosed].update_actual_img();
-
-                    int32_t DX = (WSize.right - ImagePages[PageChosed].get_actual_img().get_width() * PageImageScale) / 2 + ImageXPos, DY = (WSize.bottom - ImagePages[PageChosed].get_actual_img().get_height() * PageImageScale) / 2 + ImageYPos;
-                    ImagePages[PageChosed].get_actual_img().draw_rect((LastMousePX - DX) / PageImageScale, (LastMousePY - DY) / PageImageScale, (NowMX - DX) / PageImageScale, (NowMY - DY) / PageImageScale, PenWidth, (float)PALETTE_R / 255.f, (float)PALETTE_G / 255.f, (float)PALETTE_B / 255.f);
-                } else if (NowInstrument == LEFTPANEL_FILLED_RECTANGLE && PagesNum > PageChosed) {
-                    ImagePages[PageChosed].update_actual_img();
-
-                    int32_t DX = (WSize.right - ImagePages[PageChosed].get_actual_img().get_width() * PageImageScale) / 2 + ImageXPos, DY = (WSize.bottom - ImagePages[PageChosed].get_actual_img().get_height() * PageImageScale) / 2 + ImageYPos;
-                    ImagePages[PageChosed].get_actual_img().draw_filled_rect((LastMousePX - DX) / PageImageScale, (LastMousePY - DY) / PageImageScale, (NowMX - DX) / PageImageScale, (NowMY - DY) / PageImageScale, (float)PALETTE_R / 255.f, (float)PALETTE_G / 255.f, (float)PALETTE_B / 255.f);
-                } else if (NowInstrument == LEFTPANEL_ELLIPSE && PagesNum > PageChosed) {
-                    ImagePages[PageChosed].update_actual_img();
-
-                    int32_t DX = (WSize.right - ImagePages[PageChosed].get_actual_img().get_width() * PageImageScale) / 2 + ImageXPos, DY = (WSize.bottom - ImagePages[PageChosed].get_actual_img().get_height() * PageImageScale) / 2 + ImageYPos;
-                    ImagePages[PageChosed].get_actual_img().draw_circle((LastMousePX - DX) / PageImageScale, (LastMousePY - DY) / PageImageScale, abs(NowMX - LastMousePX) / PageImageScale, abs(NowMY - LastMousePY) / PageImageScale, PenWidth, (float)PALETTE_R / 255.f, (float)PALETTE_G / 255.f, (float)PALETTE_B / 255.f);
-                } else if (NowInstrument == LEFTPANEL_FILLED_ELLIPSE && PagesNum > PageChosed) {
-                    ImagePages[PageChosed].update_actual_img();
-
-                    int32_t DX = (WSize.right - ImagePages[PageChosed].get_actual_img().get_width() * PageImageScale) / 2 + ImageXPos, DY = (WSize.bottom - ImagePages[PageChosed].get_actual_img().get_height() * PageImageScale) / 2 + ImageYPos;
-                    ImagePages[PageChosed].get_actual_img().draw_elipse((LastMousePX - DX) / PageImageScale, (LastMousePY - DY) / PageImageScale, abs(NowMX - LastMousePX) / PageImageScale, abs(NowMY - LastMousePY) / PageImageScale, (float)PALETTE_R / 255.f, (float)PALETTE_G / 255.f, (float)PALETTE_B / 255.f);
-                } else if (NowInstrument == LEFTPANEL_LINE && PagesNum > PageChosed) {
-                    ImagePages[PageChosed].update_actual_img();
-
-                    int32_t DX = (WSize.right - ImagePages[PageChosed].get_actual_img().get_width() * PageImageScale) / 2 + ImageXPos, DY = (WSize.bottom - ImagePages[PageChosed].get_actual_img().get_height() * PageImageScale) / 2 + ImageYPos;
-                    ImagePages[PageChosed].get_actual_img().draw_line((LastMousePX - DX) / PageImageScale, (LastMousePY - DY) / PageImageScale, (NowMX - DX) / PageImageScale, (NowMY - DY) / PageImageScale, PenWidth, (float)PALETTE_R / 255.f, (float)PALETTE_G / 255.f, (float)PALETTE_B / 255.f);
-                }
+                if (NowInstrument == LEFTPANEL_CURSOR) CursorInstrument(NowMX, NowMY);
+                else if (NowInstrument == LEFTPANEL_PEN && PagesNum > PageChosed) PenInstrument(NowMX, NowMY, WSize.right, WSize.bottom);
+                else if (NowInstrument == LEFTPANEL_RECTANGLE && PagesNum > PageChosed) RectangleInstrument(NowMX, NowMY, WSize.right, WSize.bottom);
+                else if (NowInstrument == LEFTPANEL_FILLED_RECTANGLE && PagesNum > PageChosed) FilledRectangleInstrument(NowMX, NowMY, WSize.right, WSize.bottom);
+                else if (NowInstrument == LEFTPANEL_ELLIPSE && PagesNum > PageChosed) EllipseInstrument(NowMX, NowMY, WSize.right, WSize.bottom);
+                else if (NowInstrument == LEFTPANEL_FILLED_ELLIPSE && PagesNum > PageChosed) FilledEllipseInstrument(NowMX, NowMY, WSize.right, WSize.bottom);
+                else if (NowInstrument == LEFTPANEL_LINE && PagesNum > PageChosed) LineInstrument(NowMX, NowMY, WSize.right, WSize.bottom);
             }
             
             break;
