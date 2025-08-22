@@ -121,7 +121,7 @@ class Image {
             float cs = (float)(X2 - X1) / (float)ln, sn = (float)(Y2 - Y1) / (float)ln;
 
             float NowPos = 0;
-            while (NowPos < ln) {
+            while (NowPos <= ln) {
                 int32_t Px = X1 + NowPos * cs, Py = Y1 + NowPos * sn;
 
                 this->draw_elipse(Px, Py, Width, Width, R, G, B);

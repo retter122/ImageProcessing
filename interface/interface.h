@@ -184,3 +184,10 @@ static void DeleteInterface() {
 static void NewPageEvent(HWND Handle, float Scale) {
     AddNewPage(Handle, Scale, 100, 100);
 }
+
+
+// PEN INSTRUMENT FUNCTION
+static void PenInstrument(int32_t Mx, int32_t My, int32_t WSizeX, int32_t WSizeY) {
+    int32_t DX = (WSizeX - ImagePages[PageChosed].get_actual_img().get_width() * PageImageScale) / 2 + ImageXPos, DY = (WSizeY - ImagePages[PageChosed].get_actual_img().get_height() * PageImageScale) / 2 + ImageYPos;
+    ImagePages[PageChosed].get_actual_img().draw_elipse((Mx - DX) / PageImageScale, (My - DY) / PageImageScale, PenWidth, PenWidth, (float)PALETTE_R / 255.f, (float)PALETTE_G / 255.f, (float)PALETTE_B / 255.f);
+}

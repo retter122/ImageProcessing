@@ -120,11 +120,9 @@ static LRESULT WProc(HWND hWnd, UINT Mess, WPARAM WPar, LPARAM LPar) {
 
                     RGBPalete[0].set_text(std::to_string(PALETTE_R)), RGBPalete[1].set_text(std::to_string(PALETTE_G)), RGBPalete[2].set_text(std::to_string(PALETTE_B));
                 }
-            } else if (NowInstrument == LEFTPANEL_PEN && PagesNum > PageChosed) {
-                int32_t DX = (WSize.right - ImagePages[PageChosed].get_actual_img().get_width() * PageImageScale) / 2 + ImageXPos, DY = (WSize.bottom - ImagePages[PageChosed].get_actual_img().get_height() * PageImageScale) / 2 + ImageYPos;
-                ImagePages[PageChosed].get_actual_img().draw_elipse((LastMousePX - DX) / PageImageScale, (LastMousePX - DY) / PageImageScale, PenWidth, PenWidth, (float)PALETTE_R / 255.f, (float)PALETTE_G / 255.f, (float)PALETTE_B / 255.f);
-            }
+            } else if (NowInstrument == LEFTPANEL_PEN && PagesNum > PageChosed) PenInstrument(LastMousePX, LastMousePY, WSize.right, WSize.bottom);
             
+            InvalidateRect(hWnd, &WSize, FALSE);
             break;
 
         // MOSEMOVE EVENT
@@ -136,10 +134,8 @@ static LRESULT WProc(HWND hWnd, UINT Mess, WPARAM WPar, LPARAM LPar) {
                 if (NowInstrument == LEFTPANEL_CURSOR) {
                     ImageXPos += NowMX - LastMousePX, ImageYPos += NowMY - LastMousePY;
                     LastMousePX = NowMX, LastMousePY = NowMY;
-                } else if (NowInstrument == LEFTPANEL_PEN && PagesNum > PageChosed) {
-                    int32_t DX = (WSize.right - ImagePages[PageChosed].get_actual_img().get_width() * PageImageScale) / 2 + ImageXPos, DY = (WSize.bottom - ImagePages[PageChosed].get_actual_img().get_height() * PageImageScale) / 2 + ImageYPos;
-                    ImagePages[PageChosed].get_actual_img().draw_elipse((NowMX - DX) / PageImageScale, (NowMY - DY) / PageImageScale, PenWidth, PenWidth, (float)PALETTE_R / 255.f, (float)PALETTE_G / 255.f, (float)PALETTE_B / 255.f);
-                } else if (NowInstrument == LEFTPANEL_RECTANGLE && PagesNum > PageChosed) {
+                } else if (NowInstrument == LEFTPANEL_PEN && PagesNum > PageChosed) PenInstrument(NowMX, NowMY, WSize.right, WSize.bottom);
+                else if (NowInstrument == LEFTPANEL_RECTANGLE && PagesNum > PageChosed) {
                     ImagePages[PageChosed].update_actual_img();
 
                     int32_t DX = (WSize.right - ImagePages[PageChosed].get_actual_img().get_width() * PageImageScale) / 2 + ImageXPos, DY = (WSize.bottom - ImagePages[PageChosed].get_actual_img().get_height() * PageImageScale) / 2 + ImageYPos;
