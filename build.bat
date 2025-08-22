@@ -1,1 +1,1 @@
-g++ "./main.cpp" -o "./build/ImageProcessing.exe" -lgdi32 -Wall
+g++ "./main.cpp" -o "./build/ImageProcessing.exe" -lgdi32 -Wall -Ofast -fmerge-constants
