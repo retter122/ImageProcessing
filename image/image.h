@@ -16,6 +16,8 @@
 #define ToU32RGB(R, G, B) (((uint32_t)R << 16) | ((uint32_t)G << 8) | (uint32_t)B)
 #define ToF32RGB(U32, F32) (F32[0] = GetU32R(U32), F32[1] = GetU32G(U32), F32[2] = GetU32B(U32))
 
+#define LineStep (0.707)
+
 
 // IMAGE CLASS
 class Image {
@@ -76,8 +78,8 @@ class Image {
         void draw_elipse(int32_t PX, int32_t PY, int32_t SX, int32_t SY, float R, float G, float B) {
             PY = this->height - PY;
 
-            for (int32_t i = std::max(PY - SX, 0); i < std::min(PY + SX, (int32_t)this->height); ++i) {
-                int32_t rd = sqrt(SX * SX - (PY - i) * (PY - i));
+            for (int32_t i = std::max(PY - SY, 0); i < std::min(PY + SY, (int32_t)this->height); ++i) {
+                int32_t rd = sqrt(SX * SX - ((PY - i) * ((float)SX / (float)SY)) * ((PY - i) * ((float)SX / (float)SY)));
                 for (int32_t j = std::max(PX - rd, 0); j < std::min(PX + rd, (int32_t)this->width); ++j) this->bytes[i * this->width + j][0] = R, this->bytes[i * this->width + j][1] = G, this->bytes[i * this->width + j][2] = B;
             }
         }
@@ -85,11 +87,14 @@ class Image {
         void draw_circle(int32_t PX, int32_t PY, int32_t SX, int32_t SY, int32_t Wid, float R, float G, float B) {
             PY = this->height - PY;
 
-            for (int32_t i = std::max(PY - SX, 0); i < std::min(PY + SX, (int32_t)this->height); ++i) {
-                int32_t rd1 = sqrt(SX * SX - (PY - i) * (PY - i)), rd2 = (SX - Wid) > abs(PY - i) ? (sqrt((SX - Wid) * (SX - Wid) - (PY - i) * (PY - i))) : 0;
+            int32_t SX2 = SX - Wid, SY2 = SY - Wid;
 
-                for (int32_t j = std::max(PX - rd1, 0); j < std::min(PX - rd2, (int32_t)this->width); ++j) this->bytes[i * this->width + j][0] = R, this->bytes[i * this->width + j][1] = G, this->bytes[i * this->width + j][2] = B;
-                for (int32_t j = std::max(PX + rd2, 0); j < std::min(PX + rd1, (int32_t)this->width); ++j) this->bytes[i * this->width + j][0] = R, this->bytes[i * this->width + j][1] = G, this->bytes[i * this->width + j][2] = B;
+            for (int32_t i = std::max(PY - SY, 0); i < std::min(PY + SY, (int32_t)this->height); ++i) {
+                int32_t rd1 = sqrt(SX * SX - ((PY - i) * ((float)SX / (float)SY)) * ((PY - i) * ((float)SX / (float)SY)));
+                int32_t rd2 = sqrt(SX2 * SX2 - ((PY - i) * ((float)SX2 / (float)SY2)) * ((PY - i) * ((float)SX2 / (float)SY2)));
+
+                for (int32_t j = std::max(PX - rd1, 0); j < std::min(PX - std::min(std::max(rd2, 0), rd1), (int32_t)this->width); ++j) this->bytes[i * this->width + j][0] = R, this->bytes[i * this->width + j][1] = G, this->bytes[i * this->width + j][2] = B;
+                for (int32_t j = std::max(PX + std::min(std::max(rd2, 0), rd1), 0); j < std::min(PX + rd1, (int32_t)this->width); ++j) this->bytes[i * this->width + j][0] = R, this->bytes[i * this->width + j][1] = G, this->bytes[i * this->width + j][2] = B;
             }
         }
 
@@ -108,6 +113,19 @@ class Image {
 
             for (int32_t i = std::max(std::min(Y1, Y2), 0); i < std::min(std::max(Y2, Y1), (int32_t)this->height); ++i) {
                 for (int32_t j = std::max(std::min(X1, X2), 0); j < std::min(std::max(X2, X1), (int32_t)this->width); ++j) this->bytes[j + i * this->width][0] = R, this->bytes[j + i * this->width][1] = G, this->bytes[j + i * this->width][2] = B; 
+            }
+        }
+
+        void draw_line(int32_t X1, int32_t Y1, int32_t X2, int32_t Y2, uint32_t Width, float R, float G, float B) {
+            float ln = sqrtf((X1 - X2) * (X1 - X2) + (Y1 - Y2) * (Y1 - Y2));
+            float cs = (float)(X2 - X1) / (float)ln, sn = (float)(Y2 - Y1) / (float)ln;
+
+            float NowPos = 0;
+            while (NowPos < ln) {
+                int32_t Px = X1 + NowPos * cs, Py = Y1 + NowPos * sn;
+
+                this->draw_elipse(Px, Py, Width, Width, R, G, B);
+                NowPos += LineStep;
             }
         }
 

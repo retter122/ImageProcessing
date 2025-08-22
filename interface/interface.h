@@ -67,7 +67,7 @@ static Button LeftPanel[] = {
     Button(0, LEFTPANEL_START + LEFTPANEL_BTN_SIZE * 3, LEFTPANEL_BTN_SIZE, LEFTPANEL_BTN_SIZE, BmpBitmapLoad("./textures/left_panel/filled_rectangle.bmp"), LEFTPANEL_FILLED_RECTANGLE),
     Button(0, LEFTPANEL_START + LEFTPANEL_BTN_SIZE * 4, LEFTPANEL_BTN_SIZE, LEFTPANEL_BTN_SIZE, BmpBitmapLoad("./textures/left_panel/ellipse.bmp"), LEFTPANEL_ELLIPSE),
     Button(0, LEFTPANEL_START + LEFTPANEL_BTN_SIZE * 5, LEFTPANEL_BTN_SIZE, LEFTPANEL_BTN_SIZE, BmpBitmapLoad("./textures/left_panel/filled_ellipse.bmp"), LEFTPANEL_FILLED_ELLIPSE),
-    Button(0, LEFTPANEL_START + LEFTPANEL_BTN_SIZE * 6, LEFTPANEL_BTN_SIZE, LEFTPANEL_BTN_SIZE, BmpBitmapLoad("./textures/left_panel/line.bmp"), LEFTPANEL_PEN),
+    Button(0, LEFTPANEL_START + LEFTPANEL_BTN_SIZE * 6, LEFTPANEL_BTN_SIZE, LEFTPANEL_BTN_SIZE, BmpBitmapLoad("./textures/left_panel/line.bmp"), LEFTPANEL_LINE),
     Button(0, LEFTPANEL_START + LEFTPANEL_BTN_SIZE * 7, LEFTPANEL_BTN_SIZE, LEFTPANEL_BTN_SIZE, BmpBitmapLoad("./textures/left_panel/pipette.bmp"), LEFTPANEL_PIPETTE),
     Button(0, LEFTPANEL_START + LEFTPANEL_BTN_SIZE * 8, LEFTPANEL_BTN_SIZE, LEFTPANEL_BTN_SIZE, BmpBitmapLoad("./textures/left_panel/blur.bmp"), LEFTPANEL_BLUR)
 };

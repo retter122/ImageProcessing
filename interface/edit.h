@@ -41,6 +41,8 @@ class Edit {
             return str;
         }
 
+        void set_text(const std::string _text) { SetWindowTextA(this->Handle, _text.c_str()); }
+
         void Show(float Scale, HWND Parent) {
             this->Handle = CreateWindowExA(0, "EDIT", "", WS_CHILD | WS_VISIBLE | WS_BORDER, 0, 0, 0, 0, Parent, 0, 0, 0);
             this->Update(Scale);
